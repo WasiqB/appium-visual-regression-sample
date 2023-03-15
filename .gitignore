@@ -1,0 +1,6 @@
+/images/actual/
+/images/diff/
+/.idea
+/target
+/logs
+*.iml
