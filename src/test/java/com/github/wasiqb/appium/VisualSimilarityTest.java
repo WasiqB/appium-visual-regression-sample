@@ -33,7 +33,7 @@ import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Test;
 
-public class VisualSampleTest {
+public class VisualSimilarityTest {
     private static final String DEVICE_NAME_KEY    = "deviceName";
     private static final String DEVICE_VERSION_KEY = "deviceVersion";
     private static final String SCREEN_NAME        = "Home-page";
@@ -58,10 +58,7 @@ public class VisualSampleTest {
 
     @Test
     public void testNewApp () throws IOException {
-        this.driver.removeApp ("com.lambdatest.proverbial");
-        this.driver.installApp (Path.of (USER_DIR, "src/test/resources/proverbial_new.apk")
-            .toString (), new AndroidInstallApplicationOptions ().withGrantPermissionsEnabled ());
-        this.driver.activateApp ("com.lambdatest.proverbial");
+        installNewApp ();
 
         final var wait = new WebDriverWait (this.driver, ofSeconds (10));
         wait.until (visibilityOfElementLocated (accessibilityId ("Location")));
@@ -138,7 +135,7 @@ public class VisualSampleTest {
     }
 
     private File getFile (final String fileType) {
-        return Path.of (USER_DIR, "images", fileType, format ("{0}.png", SCREEN_NAME))
+        return Path.of (USER_DIR, "images", fileType, format ("{0}-similarity.png", SCREEN_NAME))
             .toFile ();
     }
 
@@ -151,5 +148,16 @@ public class VisualSampleTest {
         res.storeVisualization (diffImage);
 
         return res;
+    }
+
+    private void installNewApp () {
+        final var packageName = "com.lambdatest.proverbial";
+        final var appName = "proverbial_new.apk";
+
+        this.driver.removeApp (packageName);
+        final var options = new AndroidInstallApplicationOptions ().withGrantPermissionsEnabled ();
+        this.driver.installApp (Path.of (USER_DIR, "src/test/resources", appName)
+            .toString (), options);
+        this.driver.activateApp (packageName);
     }
 }
