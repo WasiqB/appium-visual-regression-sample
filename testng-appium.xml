@@ -1,6 +1,6 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 <suite name="Appium Visual Testing Suite" verbose="2">
-    <test name="Similarity comparison Test" enabled="false">
+    <test name="Similarity comparison Test">
         <classes>
             <class name="com.github.wasiqb.appium.VisualSimilarityTest">
                 <methods>

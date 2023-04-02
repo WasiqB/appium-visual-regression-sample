@@ -1,25 +1,16 @@
 package com.github.wasiqb.appium;
 
 import static com.google.common.truth.Truth.assertWithMessage;
-import static io.appium.java_client.AppiumBy.accessibilityId;
-import static io.appium.java_client.service.local.flags.GeneralServerFlag.BASEPATH;
-import static io.appium.java_client.service.local.flags.GeneralServerFlag.LOCAL_TIMEZONE;
-import static io.appium.java_client.service.local.flags.GeneralServerFlag.SESSION_OVERRIDE;
-import static io.appium.java_client.service.local.flags.GeneralServerFlag.USE_DRIVERS;
-import static io.appium.java_client.service.local.flags.GeneralServerFlag.USE_PLUGINS;
-import static java.lang.Boolean.parseBoolean;
-import static java.lang.Integer.parseInt;
-import static java.lang.System.getProperty;
 import static java.text.MessageFormat.format;
-import static java.time.Duration.ofSeconds;
 import static org.apache.commons.io.FileUtils.copyFile;
 import static org.openqa.selenium.OutputType.FILE;
-import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOfElementLocated;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Duration;
 
+import io.appium.java_client.AppiumBy;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.android.appmanagement.AndroidInstallApplicationOptions;
 import io.appium.java_client.android.options.UiAutomator2Options;
@@ -27,7 +18,9 @@ import io.appium.java_client.imagecomparison.SimilarityMatchingOptions;
 import io.appium.java_client.imagecomparison.SimilarityMatchingResult;
 import io.appium.java_client.service.local.AppiumDriverLocalService;
 import io.appium.java_client.service.local.AppiumServiceBuilder;
+import io.appium.java_client.service.local.flags.GeneralServerFlag;
 import org.openqa.selenium.Capabilities;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeSuite;
@@ -37,7 +30,7 @@ public class VisualSimilarityTest {
     private static final String DEVICE_NAME_KEY    = "deviceName";
     private static final String DEVICE_VERSION_KEY = "deviceVersion";
     private static final String SCREEN_NAME        = "Home-page";
-    private static final String USER_DIR           = getProperty ("user.dir");
+    private static final String USER_DIR           = System.getProperty ("user.dir");
     private static final double VISUAL_THRESHOLD   = 0.99;
 
     private AndroidDriver            driver;
@@ -60,8 +53,8 @@ public class VisualSimilarityTest {
     public void testNewApp () throws IOException {
         installNewApp ();
 
-        final var wait = new WebDriverWait (this.driver, ofSeconds (10));
-        wait.until (visibilityOfElementLocated (accessibilityId ("Location")));
+        final var wait = new WebDriverWait (this.driver, Duration.ofSeconds (10));
+        wait.until (ExpectedConditions.visibilityOfElementLocated (AppiumBy.accessibilityId ("Location")));
 
         checkVisual ();
     }
@@ -75,20 +68,20 @@ public class VisualSimilarityTest {
         final var logFile = Path.of (USER_DIR, "logs", "appium.log")
             .toFile ();
         final var builder = new AppiumServiceBuilder ();
-        return builder.withIPAddress (getProperty ("host", "127.0.0.1"))
-            .usingPort (parseInt (getProperty ("port", "4723")))
+        return builder.withIPAddress (System.getProperty ("host", "127.0.0.1"))
+            .usingPort (Integer.parseInt (System.getProperty ("port", "4723")))
             .withLogFile (logFile)
-            .withArgument (BASEPATH, "/wd/hub")
-            .withArgument (USE_DRIVERS, "uiautomator2")
-            .withArgument (USE_PLUGINS, "all")
-            .withArgument (SESSION_OVERRIDE)
-            .withArgument (LOCAL_TIMEZONE)
+            .withArgument (GeneralServerFlag.BASEPATH, "/wd/hub")
+            .withArgument (GeneralServerFlag.USE_DRIVERS, "uiautomator2")
+            .withArgument (GeneralServerFlag.USE_PLUGINS, "all")
+            .withArgument (GeneralServerFlag.SESSION_OVERRIDE)
+            .withArgument (GeneralServerFlag.LOCAL_TIMEZONE)
             .build ();
     }
 
     private Capabilities buildCapabilities () {
-        final var deviceName = getProperty (DEVICE_NAME_KEY, "Pixel_6_Pro");
-        final var deviceVersion = getProperty (DEVICE_VERSION_KEY, "11");
+        final var deviceName = System.getProperty (DEVICE_NAME_KEY, "Pixel_6_Pro");
+        final var deviceVersion = System.getProperty (DEVICE_VERSION_KEY, "11");
         final var options = new UiAutomator2Options ();
         options.setPlatformName ("Android")
             .setPlatformVersion (deviceVersion)
@@ -98,7 +91,7 @@ public class VisualSimilarityTest {
                 .toString ())
             .setAutoGrantPermissions (true)
             .setFullReset (true)
-            .setIsHeadless (parseBoolean (getProperty ("headless", "false")))
+            .setIsHeadless (Boolean.parseBoolean (System.getProperty ("headless", "false")))
             .setCapability ("appium:settings[ignoreUnimportantViews]", true);
         return options;
     }

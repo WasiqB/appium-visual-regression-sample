@@ -1,0 +1,19 @@
+<!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
+<suite name="Appium Visual Testing with LambdaTest Suite" verbose="2">
+    <test name="LambdaTest Smart UI Baseline Test">
+        <parameter name="isBaseline" value="true"/>
+        <parameter name="buildName" value="Test 10"/>
+        <parameter name="appUrl" value="lt://APP1016046941679486558170252"/>
+        <classes>
+            <class name="com.github.wasiqb.appium.LTVisualSampleTest"/>
+        </classes>
+    </test>
+    <test name="LambdaTest Smart UI Actual Test">
+        <parameter name="isBaseline" value="false"/>
+        <parameter name="buildName" value="Test 11"/>
+        <parameter name="appUrl" value="lt://APP1016046941679477474484284"/>
+        <classes>
+            <class name="com.github.wasiqb.appium.LTVisualSampleTest"/>
+        </classes>
+    </test>
+</suite>
