@@ -1,29 +1,26 @@
 package com.github.wasiqb.appium;
 
 import static com.google.common.truth.Truth.assertWithMessage;
-import static java.text.MessageFormat.format;
-import static org.apache.commons.io.FileUtils.copyFile;
 import static org.openqa.selenium.OutputType.FILE;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.Duration;
+import java.text.MessageFormat;
 
-import io.appium.java_client.AppiumBy;
 import io.appium.java_client.android.AndroidDriver;
-import io.appium.java_client.android.appmanagement.AndroidInstallApplicationOptions;
 import io.appium.java_client.android.options.UiAutomator2Options;
 import io.appium.java_client.imagecomparison.SimilarityMatchingOptions;
 import io.appium.java_client.imagecomparison.SimilarityMatchingResult;
 import io.appium.java_client.service.local.AppiumDriverLocalService;
 import io.appium.java_client.service.local.AppiumServiceBuilder;
 import io.appium.java_client.service.local.flags.GeneralServerFlag;
+import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.Capabilities;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
-import org.testng.annotations.AfterSuite;
-import org.testng.annotations.BeforeSuite;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Optional;
+import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 public class VisualSimilarityTest {
@@ -34,33 +31,26 @@ public class VisualSimilarityTest {
     private static final double VISUAL_THRESHOLD   = 0.99;
 
     private AndroidDriver            driver;
+    private boolean                  isBaseline;
     private AppiumDriverLocalService service;
 
-    @BeforeSuite (alwaysRun = true)
-    public void setupSuite () {
+    @BeforeClass (alwaysRun = true)
+    @Parameters ({ "isBaseline", "appName" })
+    public void setupSuite (@Optional ("false") boolean isBaseline, String appName) {
+        this.isBaseline = isBaseline;
         this.service = buildAppiumService ();
         this.service.start ();
-        this.driver = new AndroidDriver (this.service.getUrl (), buildCapabilities ());
+        this.driver = new AndroidDriver (this.service.getUrl (), buildCapabilities (appName));
     }
 
-    @AfterSuite (alwaysRun = true)
+    @AfterClass (alwaysRun = true)
     public void teardownSuite () {
         this.driver.quit ();
         this.service.stop ();
     }
 
     @Test
-    public void testNewApp () throws IOException {
-        installNewApp ();
-
-        final var wait = new WebDriverWait (this.driver, Duration.ofSeconds (10));
-        wait.until (ExpectedConditions.visibilityOfElementLocated (AppiumBy.accessibilityId ("Location")));
-
-        checkVisual ();
-    }
-
-    @Test
-    public void testOldApp () throws IOException {
+    public void testAppVisual () throws IOException {
         checkVisual ();
     }
 
@@ -79,7 +69,7 @@ public class VisualSimilarityTest {
             .build ();
     }
 
-    private Capabilities buildCapabilities () {
+    private Capabilities buildCapabilities (final String appName) {
         final var deviceName = System.getProperty (DEVICE_NAME_KEY, "Pixel_6_Pro");
         final var deviceVersion = System.getProperty (DEVICE_VERSION_KEY, "11");
         final var options = new UiAutomator2Options ();
@@ -87,11 +77,10 @@ public class VisualSimilarityTest {
             .setPlatformVersion (deviceVersion)
             .setDeviceName (deviceName)
             .setAvd (deviceName)
-            .setApp (Path.of (USER_DIR, "src/test/resources/proverbial_old.apk")
+            .setApp (Path.of (USER_DIR, "src/test/resources", MessageFormat.format ("{0}.apk", appName))
                 .toString ())
             .setAutoGrantPermissions (true)
             .setFullReset (true)
-            .setIsHeadless (Boolean.parseBoolean (System.getProperty ("headless", "false")))
             .setCapability ("appium:settings[ignoreUnimportantViews]", true);
         return options;
     }
@@ -108,27 +97,27 @@ public class VisualSimilarityTest {
 
     private File getActualImage () throws IOException {
         final var actualImage = this.driver.getScreenshotAs (FILE);
-        copyFile (actualImage, getFile ("actual"));
+        FileUtils.copyFile (actualImage, getFile ("actual"));
         return actualImage;
     }
 
     private File getBaseLineImage () throws IOException {
         final var baseImage = getFile ("baseline");
-        if (!baseImage.exists ()) {
+        if (isBaseline || !baseImage.exists ()) {
             final var newBaseline = this.driver.getScreenshotAs (FILE);
-            copyFile (newBaseline, baseImage);
+            FileUtils.copyFile (newBaseline, baseImage);
         }
         return baseImage;
     }
 
     private File getDiffImage (final File actualImage) throws IOException {
         final var diffImage = getFile ("diff");
-        copyFile (actualImage, diffImage);
+        FileUtils.copyFile (actualImage, diffImage);
         return diffImage;
     }
 
     private File getFile (final String fileType) {
-        return Path.of (USER_DIR, "images", fileType, format ("{0}-similarity.png", SCREEN_NAME))
+        return Path.of (USER_DIR, "images", fileType, MessageFormat.format ("{0}-similarity.png", SCREEN_NAME))
             .toFile ();
     }
 
@@ -141,16 +130,5 @@ public class VisualSimilarityTest {
         res.storeVisualization (diffImage);
 
         return res;
-    }
-
-    private void installNewApp () {
-        final var packageName = "com.lambdatest.proverbial";
-        final var appName = "proverbial_new.apk";
-
-        this.driver.removeApp (packageName);
-        final var options = new AndroidInstallApplicationOptions ().withGrantPermissionsEnabled ();
-        this.driver.installApp (Path.of (USER_DIR, "src/test/resources", appName)
-            .toString (), options);
-        this.driver.activateApp (packageName);
     }
 }

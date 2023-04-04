@@ -1,13 +1,16 @@
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 <suite name="Appium Visual Testing Suite" verbose="2">
-    <test name="Similarity comparison Test">
+    <test name="LambdaTest Appium Baseline Test">
+        <parameter name="isBaseline" value="true"/>
+        <parameter name="appName" value="proverbial_old"/>
         <classes>
-            <class name="com.github.wasiqb.appium.VisualSimilarityTest">
-                <methods>
-                    <include name="testOldApp"/>
-                    <include name="testNewApp"/>
-                </methods>
-            </class>
+            <class name="com.github.wasiqb.appium.VisualSimilarityTest"/>
+        </classes>
+    </test>
+    <test name="LambdaTest Appium Actual Test">
+        <parameter name="appName" value="proverbial_new"/>
+        <classes>
+            <class name="com.github.wasiqb.appium.VisualSimilarityTest"/>
         </classes>
     </test>
 </suite>

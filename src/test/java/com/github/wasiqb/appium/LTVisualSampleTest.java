@@ -19,23 +19,17 @@ public class LTVisualSampleTest {
     private static final String DEVICE_VERSION_KEY = "deviceVersion";
     private static final String SCREEN_NAME        = "Home-page";
 
-    private String        appUrl;
-    private String        buildName;
     private AndroidDriver driver;
-    private boolean       isBaseline;
 
     @BeforeClass (alwaysRun = true)
     @Parameters ({ "isBaseline", "buildName", "appUrl" })
     public void setupClass (@Optional ("false") final boolean isBaseline, final String buildName, final String appUrl)
         throws MalformedURLException {
-        this.isBaseline = isBaseline;
-        this.buildName = buildName;
-        this.appUrl = appUrl;
         final var userName = System.getenv ("LT_USERNAME");
         final var accessKey = System.getenv ("LT_ACCESS_KEY");
         this.driver = new AndroidDriver (
             new URL (MessageFormat.format ("https://{0}:{1}@mobile-hub.lambdatest.com/wd/hub", userName, accessKey)),
-            buildCapabilities ());
+            buildCapabilities (isBaseline, buildName, appUrl));
     }
 
     @AfterClass (alwaysRun = true)
@@ -48,7 +42,7 @@ public class LTVisualSampleTest {
         checkVisual ();
     }
 
-    private Capabilities buildCapabilities () {
+    private Capabilities buildCapabilities (final boolean isBaseline, final String buildName, final String appUrl) {
         final var deviceName = System.getProperty (DEVICE_NAME_KEY, "Pixel 5");
         final var deviceVersion = System.getProperty (DEVICE_VERSION_KEY, "11");
         final var options = new UiAutomator2Options ();
@@ -58,7 +52,7 @@ public class LTVisualSampleTest {
         ltOptions.put ("platformName", "Android");
         ltOptions.put ("deviceName", deviceName);
         ltOptions.put ("platformVersion", deviceVersion);
-        ltOptions.put ("app", this.appUrl);
+        ltOptions.put ("app", appUrl);
         ltOptions.put ("devicelog", true);
         ltOptions.put ("visual", true);
         ltOptions.put ("network", true);
@@ -69,8 +63,13 @@ public class LTVisualSampleTest {
         ltOptions.put ("isRealMobile", true);
         ltOptions.put ("autoGrantPermissions", true);
         ltOptions.put ("smartUI.project", "Sample Visual Regression");
-        ltOptions.put ("smartUI.build", this.buildName);
-        ltOptions.put ("smartUI.baseline", this.isBaseline);
+        ltOptions.put ("smartUI.build", buildName);
+        ltOptions.put ("smartUI.baseline", isBaseline);
+
+        var smartOptions = new HashMap<String, Object> ();
+        smartOptions.put ("largeImageThreshold", 1200);
+
+        ltOptions.put ("smartUI.options", smartOptions);
 
         options.setCapability ("lt:options", ltOptions);
 
